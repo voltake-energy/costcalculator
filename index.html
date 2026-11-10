@@ -1,364 +1,456 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport dikemas kini dengan maximum-scale=1.0 untuk mengelakkan Safari iPhone auto-zoom semasa menaip -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Project Cost & Margin Calculator</title>
 
-    <!-- PWA Meta Tags -->
+    <!-- PWA Meta Tags (Mesra iOS / iPhone) -->
     <meta name="theme-color" content="#f6ad55">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kos & Margin">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f6ad55'/><text x='50' y='55' dominant-baseline='middle' text-anchor='middle' font-size='50' font-weight='bold' font-family='sans-serif' fill='white'>$</text></svg>">
     
-    <!-- Inline Web App Manifest for PWA Support in a single file -->
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Kalkulator%20Kos%20%26%20Margin%22%2C%22short_name%22%3A%22KosMargin%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f3f4f6%22%2C%22theme_color%22%3A%22%23f6ad55%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%3Crect%20width%3D'100'%20height%3D'100'%20fill%3D'%23f6ad55'%2F%3E%3Ctext%20x%3D'50'%20y%3D'50'%20dominant-baseline%3D'middle'%20text-anchor%3D'middle'%20font-size%3D'40'%20font-family%3D'sans-serif'%20fill%3D'white'%3E%24%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <!-- Inline Web App Manifest untuk PWA -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Kalkulator%20Kos%20%26%20Margin%22%2C%22short_name%22%3A%22KosMargin%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f3f4f6%22%2C%22theme_color%22%3A%22%23f6ad55%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%30%20100%20100'%3E%3Crect%20width%3D'100'%20height%3D'100'%20fill%3D'%23f6ad55'%2F%3E%3Ctext%20x%3D'50'%20y%3D'50'%20dominant-baseline%3D'middle'%20text-anchor%3D'middle'%20font-size%3D'40'%20font-family%3D'sans-serif'%20fill%3D'white'%3E%24%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Include html2canvas for downloading the preview as an image -->
+    <!-- html2canvas untuk menjana gambar berkualiti tinggi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
         }
-        /* Excel-like table styling based on user image */
+        /* Saiz font minimum 16px pada input untuk elak iOS Safari auto-zoom */
+        input[type="text"], input[type="number"], input[type="date"] {
+            font-size: 16px !important;
+        }
+        @media (min-width: 768px) {
+            input[type="text"], input[type="number"], input[type="date"] {
+                font-size: 14px !important;
+            }
+        }
+        /* Gaya jadual ala Excel yang solid dan kemas */
         .excel-table {
             width: 100%;
             border-collapse: collapse;
             text-transform: uppercase;
-            font-size: 0.875rem;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #111827;
         }
         .excel-table th, .excel-table td {
-            border: 2px solid #000;
+            border: 2px solid #000000;
             padding: 8px 12px;
+            line-height: 1.25;
         }
-        .bg-orange-header { background-color: #f6ad55; } /* Orange */
-        .bg-yellow-cell { background-color: #fef08a; } /* Yellow */
-        .bg-blue-header { background-color: #93c5fd; } /* Blue */
+        .bg-orange-header { background-color: #f6ad55; } /* Oren */
+        .bg-yellow-cell { background-color: #fef08a; } /* Kuning */
+        .bg-blue-header { background-color: #93c5fd; } /* Biru */
+
+        /* Tetapan saiz Solid supaya tidak sekali-kali memanjang (straight) di telefon */
+        .mode-standard {
+            width: 700px !important;
+            min-width: 700px !important;
+        }
+        .mode-landscape {
+            width: 1040px !important;
+            min-width: 1040px !important;
+        }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body class="p-3 sm:p-6 md:p-8 min-h-screen">
 
     <div class="max-w-7xl mx-auto">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Sistem Pengiraan Kos & Margin Projek</h1>
-            <p class="text-gray-600 mt-2">Isi borang di sebelah kiri, dan muat turun hasil (preview) di sebelah kanan.</p>
+        <!-- Tajuk Utama -->
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800">Sistem Pengiraan Kos & Margin Projek</h1>
+                <p class="text-sm text-gray-600 mt-1">Mesra iPhone (iOS), Android & PC. Hasil gambar dijamin <span class="font-semibold text-blue-700">Solid & Kemas</span>.</p>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- LEFT COLUMN: INPUT FORM -->
-            <div class="lg:col-span-5 space-y-6">
+            <!-- LAJUR KIRI: BORANG INPUT -->
+            <div class="lg:col-span-5 space-y-5">
                 
-                <!-- Section 1: Project Info -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Maklumat Projek</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Client</label>
-                    <input type="text" id="in_client" placeholder="Contoh: Nama Syarikat Sdn Bhd..." value="" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500" oninput="calculate()">
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Job</label>
-                    <input type="text" id="in_job" placeholder="Contoh: Kerja-kerja Pemasangan..." value="" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500" oninput="calculate()">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh Mula</label>
-                    <input type="date" id="in_start_date" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" onchange="calculate()">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh Tamat</label>
-                    <input type="date" id="in_end_date" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" onchange="calculate()">
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 2: Mobilisation Variables -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Data Mobilisasi</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Staff (Pax)</label>
-                            <input type="number" id="in_staff" value="4" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
+                <!-- Seksyen 1: Maklumat Projek -->
+                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">1. Maklumat Projek</h2>
+                    <div class="grid grid-cols-2 gap-3.5">
+                        <div class="col-span-2">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Client</label>
+                            <input type="text" id="in_client" placeholder="Contoh: SUNGROW" value="" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" oninput="calculate()">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Job</label>
+                            <input type="text" id="in_job" placeholder="Contoh: DANAU TOK UBAN" value="" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Transport (Unit)</label>
-                            <input type="number" id="in_transport_unit" value="2" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Tarikh Mula</label>
+                            <input type="date" id="in_start_date" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" onchange="calculate()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Overtime (Jam/Pax)</label>
-                            <input type="number" id="in_ot_hours" value="15" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Homestay (Unit)</label>
-                            <input type="number" id="in_homestay_unit" value="1" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Mileage (KM)</label>
-                            <input type="number" id="in_mileage" value="616" class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                            <input type="text" id="in_location" value="" placeholder="Contoh: Tanjung Malim..." class="w-full border-gray-300 rounded-lg shadow-sm border p-2" oninput="calculate()">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Tarikh Tamat</label>
+                            <input type="date" id="in_end_date" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" onchange="calculate()">
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 3: Costing & Project Values -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Nilai PO & Kos Subkontraktor</h2>
-                    <div class="grid grid-cols-1 gap-4">
+                <!-- Seksyen 2: Data Mobilisasi -->
+                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">2. Data Mobilisasi</h2>
+                    <div class="grid grid-cols-2 gap-3.5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nilai PO (Sebelum SST) - RM</label>
-                            <input type="number" id="in_po_amount" value="" placeholder="0.00" class="w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:bg-white transition-colors" oninput="calculate()">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Staff (Pax)</label>
+                            <input type="number" id="in_staff" value="4" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kadar SST (%)</label>
-                            <input type="number" id="in_sst_rate" value="8" class="w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:bg-white transition-colors" oninput="calculate()">
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Transport (Unit)</label>
+                            <input type="number" id="in_transport_unit" value="2" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Overtime (Jam/Pax)</label>
+                            <input type="number" id="in_ot_hours" value="15" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Homestay (Unit)</label>
+                            <input type="number" id="in_homestay_unit" value="1" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Mileage (KM)</label>
+                            <input type="number" id="in_mileage" value="616" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Location</label>
+                            <input type="text" id="in_location" value="" placeholder="Contoh: Tanjung Malim" class="w-full border-gray-300 rounded-lg shadow-sm border p-2.5 outline-none" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seksyen 3: Nilai PO & Kos Subkontraktor -->
+                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">3. Nilai PO & Kos Subkontraktor</h2>
+                    <div class="grid grid-cols-1 gap-3.5">
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Nilai PO (Sebelum SST) - RM</label>
+                            <input type="number" id="in_po_amount" value="" placeholder="0.00" class="w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Kadar SST (%)</label>
+                            <input type="number" id="in_sst_rate" value="8" class="w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none" oninput="calculate()">
                         </div>
                         
-                        <div id="subcont-inputs-container" class="space-y-2 mt-2 border-t pt-4">
+                        <div id="subcont-inputs-container" class="space-y-3 mt-1 border-t pt-3">
                             <div class="subcont-input-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Subcont 1 - RM</label>
-                                <input type="number" class="subcont-val w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:bg-white transition-colors" value="" placeholder="0.00" oninput="calculate()">
+                                <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Payment Subcont 1 - RM</label>
+                                <input type="number" class="subcont-val w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none" value="" placeholder="0.00" oninput="calculate()">
                             </div>
                         </div>
-                        <button onclick="addSubcont()" class="w-full mt-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2.5 px-4 rounded-lg border-2 border-blue-200 border-dashed transition flex items-center justify-center">+ Tambah Subcont Baru</button>
+                        <button type="button" onclick="addSubcont()" class="w-full mt-1 text-sm bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 font-bold py-3 px-4 rounded-lg border-2 border-blue-200 border-dashed transition flex items-center justify-center">
+                            + Tambah Subcont Baru
+                        </button>
                     </div>
                 </div>
 
-                <!-- Section 4: Rates (Editable Default) -->
-                <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-                    <h2 class="text-sm font-bold text-gray-600 mb-2">Kadar Kos (Rates RM)</h2>
-                    <div class="grid grid-cols-3 gap-2 text-sm">
+                <!-- Seksyen 4: Kadar Kos (Rates RM) -->
+                <div class="bg-gray-50 p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-sm font-bold text-gray-700 mb-3">4. Kadar Kos Tetap (Rates RM)</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">OT/Jam</label>
-                            <input type="number" id="rate_ot" value="18" class="w-full border-gray-300 rounded shadow-sm border p-1 text-sm" oninput="calculate()">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">OT / Jam</label>
+                            <input type="number" id="rate_ot" value="18" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 bg-white outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Transport/KM</label>
-                            <input type="number" step="0.1" id="rate_transport" value="0.50" class="w-full border-gray-300 rounded shadow-sm border p-1 text-sm" oninput="calculate()">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Transport / KM</label>
+                            <input type="number" step="0.1" id="rate_transport" value="0.50" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 bg-white outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Makan/Hari/Pax</label>
-                            <input type="number" id="rate_makan" value="25" class="w-full border-gray-300 rounded shadow-sm border p-1 text-sm" oninput="calculate()">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Makan / Hari / Pax</label>
+                            <input type="number" id="rate_makan" value="25" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 bg-white outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Homestay/Malam</label>
-                            <input type="number" id="rate_homestay" value="250" class="w-full border-gray-300 rounded shadow-sm border p-1 text-sm" oninput="calculate()">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Homestay / Malam</label>
+                            <input type="number" id="rate_homestay" value="250" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 bg-white outline-none" oninput="calculate()">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Overnight/Pax</label>
-                            <input type="number" id="rate_overnight" value="50" class="w-full border-gray-300 rounded shadow-sm border p-1 text-sm" oninput="calculate()">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Overnight / Pax</label>
+                            <input type="number" id="rate_overnight" value="50" class="w-full border-gray-300 rounded-lg shadow-sm border p-2 bg-white outline-none" oninput="calculate()">
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- RIGHT COLUMN: PREVIEW & DOWNLOAD -->
+            <!-- LAJUR KANAN: PREVIEW SOLID & MUAT TURUN -->
             <div class="lg:col-span-7">
-                <div class="sticky top-8 space-y-4">
-                    <button onclick="downloadImage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Download Preview as Image
-                    </button>
-
-                    <!-- THE PREVIEW CARD to be captured -->
-                    <div id="preview-area" class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 relative overflow-hidden">
-                        
-                        <!-- Header: Estimation & Brand -->
-                        <div class="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-3">
-                            <div class="bg-gray-800 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded uppercase tracking-widest shadow-sm">
-                                Estimation Cost
-                            </div>
-                            <div class="text-gray-300 font-black text-xl md:text-2xl pointer-events-none tracking-widest leading-none">
-                                VOLTAKE
-                            </div>
-                        </div>
-                        
-                        <!-- Table 1: Mobilisation Costing -->
-                        <div class="mb-8 overflow-x-auto">
-                            <table class="excel-table min-w-full">
-                                <thead>
-                                    <tr>
-                                        <th colspan="3" class="bg-orange-header text-center">MOBILISATION COSTING</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="w-1/3">CLIENT</td>
-                                        <td colspan="2" class="bg-yellow-cell">: <span id="out_client">SUNGROW</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>JOB</td>
-                                        <td colspan="2" class="bg-yellow-cell">: <span id="out_job">DANAU TOK UBAN</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>DATE</td>
-                                        <td colspan="2" class="bg-yellow-cell">: <span id="out_date_range">-</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>PERIOD</td>
-                                        <td colspan="2" class="bg-yellow-cell"><span id="out_days">3</span> D <span id="out_nights">2</span> N</td>
-                                    </tr>
-                                    <tr>
-                                        <td>STAFF</td>
-                                        <td class="bg-yellow-cell text-right w-1/4"><span id="out_staff">4</span></td>
-                                        <td>PAX</td>
-                                    </tr>
-                                    <tr>
-                                        <td>TRANSPORTATION</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_transport_unit">2</span></td>
-                                        <td>UNIT</td>
-                                    </tr>
-                                    <tr>
-                                        <td>OVERTIME</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_ot_hours">15</span></td>
-                                        <td>HOURS /PAX</td>
-                                    </tr>
-                                    <tr>
-                                        <td>HOMESTAY</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_homestay_unit">1</span></td>
-                                        <td>UNIT</td>
-                                    </tr>
-                                    <tr>
-                                        <td>MAKAN</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_days_makan">3</span></td>
-                                        <td>DAYS</td>
-                                    </tr>
-                                    <tr>
-                                        <td>OVERNIGHT</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_nights_overnight">2</span></td>
-                                        <td>NIGHT</td>
-                                    </tr>
-                                    <tr>
-                                        <td>MILEAGE</td>
-                                        <td class="bg-yellow-cell text-right"><span id="out_mileage">616</span></td>
-                                        <td>KM</td>
-                                    </tr>
-                                    <tr>
-                                        <td>LOCATION</td>
-                                        <td colspan="2" class="bg-yellow-cell">: <span id="out_location">-</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="bg-orange-header text-black">TOTAL AMOUNT</td>
-                                        <td class="bg-orange-header text-black text-right"><span id="out_mob_total">5,056</span></td>
-                                        <td class="bg-orange-header text-black">RM</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                <div class="sticky top-6 space-y-4">
+                    
+                    <!-- Kawalan Mod Susunan & Muat Turun -->
+                    <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                        <!-- Pilihan Orientasi Solid -->
+                        <div class="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
+                            <button type="button" id="btn_mode_standard" onclick="setLayoutMode('standard')" class="flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition bg-white text-gray-900 shadow-sm">
+                                Solid Standard (Macam Gambar)
+                            </button>
+                            <button type="button" id="btn_mode_landscape" onclick="setLayoutMode('landscape')" class="flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition text-gray-600 hover:text-gray-900">
+                                Solid Landscape (Lebar)
+                            </button>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Table 2: Costing Detail -->
-                            <div class="overflow-x-auto">
-                                <table class="excel-table min-w-full">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2" class="bg-yellow-cell text-center">COSTING DETAIL</th>
-                                        </tr>
-                                        <tr>
-                                            <th class="bg-blue-header">DESCRIPTION</th>
-                                            <th class="bg-blue-header">COST RM</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-right">
-                                        <tr>
-                                            <td class="text-left">OVERTIME</td>
-                                            <td><span id="out_rate_ot">18.00</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-left">TRANSPORT</td>
-                                            <td><span id="out_rate_transport">0.50</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-left">MAKAN</td>
-                                            <td><span id="out_rate_makan">25.00</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-left">HOMESTAY</td>
-                                            <td><span id="out_rate_homestay">250.00</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-left">OVERNIGHT</td>
-                                            <td><span id="out_rate_overnight">50.00</span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <!-- Butang Muat Turun / Simpan -->
+                        <button type="button" id="btn_download" onclick="downloadImage()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-5 rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Download Preview as Image</span>
+                        </button>
+                    </div>
 
-                            <!-- Table 3: Project Result & Margin -->
-                            <div class="overflow-x-auto">
-                                <table class="excel-table min-w-full">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2" class="bg-gray-800 text-white text-center">PROJECT SUMMARY</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-right">
-                                        <tr>
-                                            <td class="text-left text-xs text-gray-500">PO AMOUNT</td>
-                                            <td>RM <span id="out_po_amount">0.00</span></td>
-                                        </tr>
-                                    </tbody>
-                                    <tbody id="out_subconts_list" class="text-right">
-                                        <!-- Dynamic subconts will be injected here via JS -->
-                                        <tr>
-                                            <td class="text-left text-xs text-gray-500">SUBCONT 1</td>
-                                            <td>RM <span>0.00</span></td>
-                                        </tr>
-                                    </tbody>
-                                    <tbody class="text-right">
-                                        <tr>
-                                            <td class="text-left text-xs text-gray-500">MOBILISATION</td>
-                                            <td>RM <span id="out_mob_summary">0.00</span></td>
-                                        </tr>
-                                        <tr class="border-t-4 border-black">
-                                            <td class="text-left font-bold">TOTAL COST</td>
-                                            <td id="cell_total_cost" class="font-bold transition-colors duration-200">RM <span id="out_total_cost">0.00</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-left font-bold">AMOUNT MARGIN</td>
-                                            <td id="cell_margin" class="font-bold transition-colors duration-200">RM <span id="out_margin">0.00</span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <!-- RUANG SKALA PINTAR (Supaya paparan di skrin telefon nampak penuh & solid tanpa pecah) -->
+                    <div id="preview-viewport" class="w-full overflow-hidden flex justify-center bg-gray-200/60 rounded-2xl p-2 sm:p-4 border border-gray-300/80">
+                        <div id="preview-scale-wrapper" class="origin-top transition-transform duration-150">
+                            
+                            <!-- KAD PREVIEW UTAMA YANG AKAN DITANGKAP OLEH HTML2CANVAS -->
+                            <div id="preview-area" class="mode-standard bg-white p-8 rounded-xl shadow-lg border border-gray-200 relative">
                                 
-                                <!-- SST & Final PO Info Box -->
-                                <div class="mt-4 p-3 border-2 border-black bg-gray-50 text-xs font-semibold">
-                                    <div class="flex justify-between">
-                                        <span>SST (<span id="out_sst_rate_display">8</span>%):</span>
-                                        <span>RM <span id="out_sst">0.00</span></span>
+                                <!-- Header: Estimation & Brand -->
+                                <div class="flex justify-between items-end mb-6 border-b-2 border-gray-800 pb-3">
+                                    <div class="bg-gray-900 text-white text-xs font-extrabold px-3.5 py-1.5 rounded uppercase tracking-widest">
+                                        Estimation Cost
                                     </div>
-                                    <div class="flex justify-between border-t border-gray-400 mt-1 pt-1 text-sm font-bold">
-                                        <span>FINAL PO (INCL. SST):</span>
-                                        <span>RM <span id="out_final_po">0.00</span></span>
+                                    <div class="text-gray-300 font-black text-2xl pointer-events-none tracking-widest leading-none select-none">
+                                        VOLTAKE
                                     </div>
                                 </div>
+                                
+                                <!-- Susunan Kandungan (Berubah mengikut Standard vs Landscape, tetapi KEKAL SOLID) -->
+                                <div id="preview-body-grid" class="grid grid-cols-1 gap-7">
+                                    
+                                    <!-- Jadual 1: Mobilisation Costing -->
+                                    <div id="section-mob-table">
+                                        <table class="excel-table">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="3" class="bg-orange-header text-center text-sm tracking-wide">MOBILISATION COSTING</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="w-[34%]">CLIENT</td>
+                                                    <td colspan="2" class="bg-yellow-cell">: <span id="out_client">-</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>JOB</td>
+                                                    <td colspan="2" class="bg-yellow-cell">: <span id="out_job">-</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>DATE</td>
+                                                    <td colspan="2" class="bg-yellow-cell">: <span id="out_date_range">-</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>PERIOD</td>
+                                                    <td colspan="2" class="bg-yellow-cell"><span id="out_days">3</span> D <span id="out_nights">2</span> N</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>STAFF</td>
+                                                    <td class="bg-yellow-cell text-right w-[24%]"><span id="out_staff">4</span></td>
+                                                    <td class="w-[42%]">PAX</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>TRANSPORTATION</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_transport_unit">2</span></td>
+                                                    <td>UNIT</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>OVERTIME</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_ot_hours">15</span></td>
+                                                    <td>HOURS /PAX</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>HOMESTAY</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_homestay_unit">1</span></td>
+                                                    <td>UNIT</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>MAKAN</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_days_makan">3</span></td>
+                                                    <td>DAYS</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>OVERNIGHT</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_nights_overnight">2</span></td>
+                                                    <td>NIGHT</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>MILEAGE</td>
+                                                    <td class="bg-yellow-cell text-right"><span id="out_mileage">616</span></td>
+                                                    <td>KM</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>LOCATION</td>
+                                                    <td colspan="2" class="bg-yellow-cell">: <span id="out_location">-</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="bg-orange-header text-black font-extrabold">TOTAL AMOUNT</td>
+                                                    <td class="bg-orange-header text-black text-right font-extrabold"><span id="out_mob_total">2,896</span></td>
+                                                    <td class="bg-orange-header text-black font-extrabold">RM</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Bahagian Bawah / Kanan: Sentiasa 2 Lajur Bersebelahan (TIDAK AKAN JADI STRAIGHT) -->
+                                    <div id="section-bottom-tables" class="grid grid-cols-2 gap-6 items-start">
+                                        
+                                        <!-- Jadual 2: Costing Detail -->
+                                        <div>
+                                            <table class="excel-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th colspan="2" class="bg-yellow-cell text-center">COSTING DETAIL</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="bg-blue-header text-center">DESCRIPTION</th>
+                                                        <th class="bg-blue-header text-center">COST RM</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="text-right">
+                                                    <tr>
+                                                        <td class="text-left">OVERTIME</td>
+                                                        <td><span id="out_rate_ot">18.00</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">TRANSPORT</td>
+                                                        <td><span id="out_rate_transport">0.50</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">MAKAN</td>
+                                                        <td><span id="out_rate_makan">25.00</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">HOMESTAY</td>
+                                                        <td><span id="out_rate_homestay">250.00</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">OVERNIGHT</td>
+                                                        <td><span id="out_rate_overnight">50.00</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Jadual 3: Project Summary & Margin -->
+                                        <div>
+                                            <table class="excel-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th colspan="2" class="bg-gray-900 text-white text-center">PROJECT SUMMARY</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="text-right">
+                                                    <tr>
+                                                        <td class="text-left text-xs text-gray-500">PO AMOUNT</td>
+                                                        <td>RM <span id="out_po_amount">0.00</span></td>
+                                                    </tr>
+                                                </tbody>
+                                                <tbody id="out_subconts_list" class="text-right">
+                                                    <tr>
+                                                        <td class="text-left text-xs text-gray-500">SUBCONT 1</td>
+                                                        <td>RM <span>0.00</span></td>
+                                                    </tr>
+                                                </tbody>
+                                                <tbody class="text-right">
+                                                    <tr>
+                                                        <td class="text-left text-xs text-gray-500">MOBILISATION</td>
+                                                        <td>RM <span id="out_mob_summary">0.00</span></td>
+                                                    </tr>
+                                                    <tr class="border-t-4 border-black">
+                                                        <td class="text-left font-extrabold">TOTAL COST</td>
+                                                        <td id="cell_total_cost" class="font-extrabold">RM <span id="out_total_cost">0.00</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left font-extrabold">AMOUNT MARGIN</td>
+                                                        <td id="cell_margin" class="font-extrabold">RM <span id="out_margin">0.00</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            
+                                            <!-- Kotak Info SST & Final PO -->
+                                            <div class="mt-4 p-3 border-2 border-black bg-gray-50 text-xs font-bold">
+                                                <div class="flex justify-between text-gray-800">
+                                                    <span>SST (<span id="out_sst_rate_display">8</span>%):</span>
+                                                    <span>RM <span id="out_sst">0.00</span></span>
+                                                </div>
+                                                <div class="flex justify-between border-t border-gray-400 mt-1.5 pt-1.5 text-sm font-extrabold text-black">
+                                                    <span>FINAL PO (INCL. SST):</span>
+                                                    <span>RM <span id="out_final_po">0.00</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="mt-8 text-center text-[10px] text-gray-400 font-bold tracking-widest border-t border-gray-100 pt-4 uppercase">
+                                    &copy; Copyright by Voltake
+                                </div>
+
                             </div>
+                            <!-- Tamat #preview-area -->
                         </div>
-
-                        <!-- Footer -->
-                        <div class="mt-8 text-center text-[10px] text-gray-400 font-semibold tracking-widest border-t border-gray-100 pt-4 uppercase">
-                            &copy; Copyright by Voltake
-                        </div>
-
                     </div>
-                    <!-- End of preview area -->
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- MODAL SIMPAN GAMBAR (KHAS UNTUK MEMUDAHKAN PENGGUNA IPHONE / IOS & MOBILE) -->
+    <div id="image-modal" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <h3 class="font-extrabold text-gray-800 text-base">Gambar Siap Dijana (Solid HD)</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-700 font-bold text-xl leading-none px-2">&times;</button>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-xs text-blue-900 space-y-1">
+                <p class="font-bold">📱 Tip Pengguna iPhone / iOS:</p>
+                <p>Tekan butang <b>"Share / Simpan ke Photos"</b> di bawah, atau <b>tekan lama (long-press)</b> pada gambar di bawah dan pilih <b>"Save to Photos"</b>.</p>
+            </div>
+
+            <div class="overflow-y-auto flex-1 bg-gray-100 rounded-lg p-2 border flex items-center justify-center">
+                <img id="generated-img-preview" src="" alt="Preview Kos Projek" class="max-w-full h-auto rounded shadow-sm" />
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t">
+                <button type="button" id="btn_native_share" onclick="shareImageNative()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                    </svg>
+                    Share / Simpan ke Photos
+                </button>
+                <button type="button" onclick="closeModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-4 rounded-xl transition text-sm">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logik JavaScript -->
     <script>
-        // Number formatter for currency
+        let currentMode = 'standard'; // 'standard' (700px) atau 'landscape' (1040px)
+        let lastGeneratedBlob = null;
+        let lastGeneratedFileName = 'Project_Margin.png';
+
+        // Pemformat nombor untuk mata wang RM
         const formatRM = (num) => {
             return parseFloat(num).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
@@ -370,20 +462,86 @@
             return parseFloat(document.getElementById(id).value) || 0;
         }
 
+        // Tukar antara Mod Solid Standard (Macam Gambar) dan Mod Solid Landscape
+        function setLayoutMode(mode) {
+            currentMode = mode;
+            const previewArea = document.getElementById('preview-area');
+            const bodyGrid = document.getElementById('preview-body-grid');
+            const mobSection = document.getElementById('section-mob-table');
+            const bottomSection = document.getElementById('section-bottom-tables');
+            const btnStd = document.getElementById('btn_mode_standard');
+            const btnLand = document.getElementById('btn_mode_landscape');
+
+            if (mode === 'landscape') {
+                previewArea.classList.remove('mode-standard');
+                previewArea.classList.add('mode-landscape');
+                
+                // Susun sebelah-menyebelah untuk Landscape
+                bodyGrid.className = 'grid grid-cols-12 gap-6 items-start';
+                mobSection.className = 'col-span-6';
+                bottomSection.className = 'col-span-6 grid grid-cols-2 gap-4 items-start';
+
+                btnLand.className = 'flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition bg-white text-gray-900 shadow-sm';
+                btnStd.className = 'flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition text-gray-600 hover:text-gray-900';
+            } else {
+                previewArea.classList.remove('mode-landscape');
+                previewArea.classList.add('mode-standard');
+                
+                // Susun atas-bawah (tetapi bahagian bawah kekal 2 lajur solid seperti gambar)
+                bodyGrid.className = 'grid grid-cols-1 gap-7';
+                mobSection.className = '';
+                bottomSection.className = 'grid grid-cols-2 gap-6 items-start';
+
+                btnStd.className = 'flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition bg-white text-gray-900 shadow-sm';
+                btnLand.className = 'flex-1 sm:flex-initial px-3 py-2 rounded-md text-xs font-bold transition text-gray-600 hover:text-gray-900';
+            }
+
+            fitPreviewToScreen();
+        }
+
+        // Fungsi pintar untuk mengecilkan skala (scale) paparan di skrin telefon supaya sentiasa nampak Solid
+        function fitPreviewToScreen() {
+            const viewport = document.getElementById('preview-viewport');
+            const wrapper = document.getElementById('preview-scale-wrapper');
+            const previewArea = document.getElementById('preview-area');
+
+            if (!viewport || !wrapper || !previewArea) return;
+
+            // Reset terlebih dahulu untuk ukur saiz sebenar
+            wrapper.style.transform = 'scale(1)';
+            wrapper.style.height = 'auto';
+
+            const availableWidth = viewport.clientWidth - 24; // Tolak sedikit padding
+            const targetWidth = currentMode === 'landscape' ? 1040 : 700;
+
+            if (availableWidth < targetWidth) {
+                const scale = availableWidth / targetWidth;
+                wrapper.style.transform = `scale(${scale})`;
+                // Laraskan tinggi supaya tiada ruang kosong berlebihan di bawah apabila dikecilkan
+                const actualHeight = previewArea.offsetHeight;
+                wrapper.style.height = `${actualHeight * scale}px`;
+            } else {
+                wrapper.style.transform = 'scale(1)';
+                wrapper.style.height = 'auto';
+            }
+        }
+
+        window.addEventListener('resize', fitPreviewToScreen);
+
         let subcontCount = 1;
 
-        // Function to dynamically add more Subconts
+        // Tambah Subcont secara dinamik
         function addSubcont() {
             subcontCount++;
             const container = document.getElementById('subcont-inputs-container');
             const div = document.createElement('div');
-            div.className = 'subcont-input-group flex items-end gap-2 mt-3';
+            div.className = 'subcont-input-group flex items-end gap-2 mt-2';
             div.innerHTML = `
                 <div class="flex-grow">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Subcont ${subcontCount} - RM</label>
-                    <input type="number" class="subcont-val w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2 focus:ring-blue-500 focus:bg-white transition-colors" value="" placeholder="0.00" oninput="calculate()">
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Payment Subcont ${subcontCount} - RM</label>
+                    <input type="number" class="subcont-val w-full bg-gray-50 border-gray-300 rounded-lg shadow-sm border p-2.5 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none" value="" placeholder="0.00" oninput="calculate()">
                 </div>
-                <button onclick="removeSubcont(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-bold shadow-sm transition">X</button>
+                <button type="button" onclick="removeSubcont(this)" class="bg-red-500 hover:bg-red-600 text-white px-3.5 py-2.5 rounded-lg font-bold shadow-sm transition">X</button>
             `;
             container.appendChild(div);
             calculate();
@@ -391,10 +549,17 @@
 
         function removeSubcont(btn) {
             btn.closest('.subcont-input-group').remove();
-            calculate(); // Recalculate everything after removing
+            // Kemas kini label nombor turutan Subcont
+            const groups = document.querySelectorAll('#subcont-inputs-container .subcont-input-group');
+            subcontCount = groups.length;
+            groups.forEach((group, idx) => {
+                const label = group.querySelector('label');
+                if (label) label.innerText = `Payment Subcont ${idx + 1} - RM`;
+            });
+            calculate();
         }
 
-        // Helper to format date
+        // Format tarikh ke DD-MMM-YYYY
         const formatDate = (dateString) => {
             if (!dateString) return '-';
             const date = new Date(dateString);
@@ -402,17 +567,16 @@
         };
 
         function calculate() {
-            // 1. Get Inputs (Names)
+            // 1. Ambil maklumat teks
             const clientInput = document.getElementById('in_client').value;
             const jobInput = document.getElementById('in_job').value;
             const locationInput = document.getElementById('in_location').value;
             
-            // Fallbacks for empty names
             const client = clientInput.trim() !== "" ? clientInput : "-";
             const job = jobInput.trim() !== "" ? jobInput : "-";
             const location = locationInput.trim() !== "" ? locationInput : "-";
             
-            // Get Dates and calculate Period
+            // 2. Kira tempoh hari & malam
             const startDateStr = document.getElementById('in_start_date').value;
             const endDateStr = document.getElementById('in_end_date').value;
             let days = 0;
@@ -422,7 +586,7 @@
             if (startDateStr && endDateStr) {
                 const start = new Date(startDateStr);
                 const end = new Date(endDateStr);
-                dateRange = `${formatDate(startDateStr)} to ${formatDate(endDateStr)}`;
+                dateRange = `${formatDate(startDateStr)} TO ${formatDate(endDateStr)}`;
                 
                 if (end >= start) {
                     const diffTime = Math.abs(end - start);
@@ -436,14 +600,14 @@
                 nights = 0;
             }
 
-            // Get Mobilisation Inputs
+            // 3. Ambil pemboleh ubah mobilisasi
             const staff = getVal('in_staff');
             const transportUnit = getVal('in_transport_unit');
             const otHours = getVal('in_ot_hours');
             const homestayUnit = getVal('in_homestay_unit');
             const mileage = getVal('in_mileage');
 
-            // PO & Subconts
+            // 4. Ambil nilai PO & Subcont
             const poAmount = getVal('in_po_amount');
             const sstRate = getVal('in_sst_rate');
 
@@ -462,17 +626,16 @@
                 `;
             });
             
-            // Inject dynamic rows into preview table
             document.getElementById('out_subconts_list').innerHTML = subcontRowsHtml;
 
-            // Rates
+            // 5. Ambil kadar kos (Rates)
             const rateOT = getVal('rate_ot');
             const rateTransport = getVal('rate_transport');
             const rateMakan = getVal('rate_makan');
             const rateHomestay = getVal('rate_homestay');
             const rateOvernight = getVal('rate_overnight');
 
-            // 2. Calculate Mobilisation Costs based on user constraints
+            // 6. Kira jumlah kos mobilisasi
             const costOT = staff * otHours * rateOT;
             const costTransport = mileage * transportUnit * rateTransport;
             const costMakan = days * staff * rateMakan;
@@ -481,14 +644,14 @@
 
             const totalMobCost = costOT + costTransport + costMakan + costHomestay + costOvernight;
 
-            // 3. Calculate Project Margins
+            // 7. Kira Margin Projek & SST
             const totalProjectCost = totalSubcont + totalMobCost;
             const marginAmount = poAmount - totalProjectCost;
             
             const sst = poAmount * (sstRate / 100);
             const finalPoAmount = poAmount + sst;
 
-            // 4. Update DOM Preview
+            // 8. Kemas kini teks pada Preview
             document.getElementById('out_client').innerText = client;
             document.getElementById('out_job').innerText = job;
             document.getElementById('out_date_range').innerText = dateRange.toUpperCase();
@@ -503,14 +666,12 @@
             document.getElementById('out_mileage').innerText = formatNum(mileage);
             document.getElementById('out_location').innerText = location;
             
-            // Format rates
             document.getElementById('out_rate_ot').innerText = formatRM(rateOT);
             document.getElementById('out_rate_transport').innerText = formatRM(rateTransport);
             document.getElementById('out_rate_makan').innerText = formatRM(rateMakan);
             document.getElementById('out_rate_homestay').innerText = formatRM(rateHomestay);
             document.getElementById('out_rate_overnight').innerText = formatRM(rateOvernight);
 
-            // Format totals
             document.getElementById('out_mob_total').innerText = formatNum(totalMobCost);
             document.getElementById('out_po_amount').innerText = formatRM(poAmount);
             
@@ -518,7 +679,7 @@
             document.getElementById('out_total_cost').innerText = formatRM(totalProjectCost);
             document.getElementById('out_margin').innerText = formatRM(marginAmount);
             
-            // Apply dynamic colors for Total Cost and Amount Margin
+            // Warna dinamik untuk Total Cost & Margin
             const cellTotalCost = document.getElementById('cell_total_cost');
             const cellMargin = document.getElementById('cell_margin');
 
@@ -536,33 +697,117 @@
             
             document.getElementById('out_sst_rate_display').innerText = sstRate;
             document.getElementById('out_sst').innerText = formatRM(sst);
-            
-            // Ensures Final PO is dynamically reflecting
             document.getElementById('out_final_po').innerText = formatRM(finalPoAmount);
+
+            // Laraskan semula skala selepas kandungan dikemas kini
+            fitPreviewToScreen();
         }
 
-        // 5. Download Image Function using html2canvas
+        // 9. Fungsi Muat Turun Gambar Solid (Mesra PC, Android & iPhone iOS)
         function downloadImage() {
             const element = document.getElementById('preview-area');
-            const jobName = document.getElementById('in_job').value || 'Preview_Projek';
-            
-            html2canvas(element, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `Project_Margin_${jobName}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+            const wrapper = document.getElementById('preview-scale-wrapper');
+            const btn = document.getElementById('btn_download');
+            const rawJobName = document.getElementById('in_job').value.trim() || 'Preview_Projek';
+            const cleanJobName = rawJobName.replace(/[^a-zA-Z0-9_-]/g, '_');
+            lastGeneratedFileName = `Project_Margin_${cleanJobName}.png`;
+
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = `<span>Menjana Gambar Solid...</span>`;
+            btn.disabled = true;
+
+            // Simpan transform asal dan tetapkan kepada skala 100% sementara supaya tangkapan gambar tajam & solid
+            const prevTransform = wrapper.style.transform;
+            const prevHeight = wrapper.style.height;
+            wrapper.style.transform = 'scale(1)';
+            wrapper.style.height = 'auto';
+
+            const targetWidth = currentMode === 'landscape' ? 1040 : 700;
+
+            html2canvas(element, {
+                scale: 2.5, // Resolusi sangat tajam (HD)
+                backgroundColor: "#ffffff",
+                width: targetWidth,
+                windowWidth: 1400, // Paksa html2canvas merender pada pandangan desktop penuh
+                useCORS: true
+            }).then(canvas => {
+                // Kembalikan skala skrin asal serta-merta
+                wrapper.style.transform = prevTransform;
+                wrapper.style.height = prevHeight;
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                // Tunjukkan dalam modal khas supaya pengguna iPhone boleh Save to Photos / Share dengan mudah
+                document.getElementById('generated-img-preview').src = dataUrl;
+                
+                canvas.toBlob(blob => {
+                    lastGeneratedBlob = blob;
+                    
+                    // Semak jika peranti ialah iOS / Mobile
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                    if (isIOS || isMobile) {
+                        // Buka modal mesra iPhone supaya mereka boleh terus simpan ke Photos atau WhatsApp
+                        openModal();
+                    } else {
+                        // Di PC/Laptop, terus muat turun fail PNG seperti biasa
+                        const link = document.createElement('a');
+                        link.download = lastGeneratedFileName;
+                        link.href = dataUrl;
+                        link.click();
+                    }
+                }, 'image/png');
+
             }).catch(err => {
-                console.error("Error capturing image: ", err);
-                const msgBox = document.createElement('div');
-                msgBox.innerHTML = `<div style="position:fixed; top:20px; right:20px; background:red; color:white; padding:15px; border-radius:8px; z-index:9999;">Ralat semasa memuat turun gambar.</div>`;
-                document.body.appendChild(msgBox);
-                setTimeout(() => msgBox.remove(), 3000);
+                wrapper.style.transform = prevTransform;
+                wrapper.style.height = prevHeight;
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+                console.error("Ralat menangkap gambar: ", err);
             });
         }
 
-        // Run calculation once on page load to initialize
+        function openModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Fungsi Web Share API untuk pengguna iPhone / Android simpan terus ke Photos atau hantar ke WhatsApp
+        async function shareImageNative() {
+            if (lastGeneratedBlob && navigator.canShare) {
+                const file = new File([lastGeneratedBlob], lastGeneratedFileName, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Kos & Margin Projek',
+                            text: 'Berikut adalah kiraan kos & margin projek.'
+                        });
+                        return;
+                    } catch (err) {
+                        console.log('Kongsi dibatalkan atau gagal:', err);
+                    }
+                }
+            }
+            // Fallback jika pelayar tidak menyokong navigator.share
+            const link = document.createElement('a');
+            link.download = lastGeneratedFileName;
+            link.href = document.getElementById('generated-img-preview').src;
+            link.click();
+        }
+
+        // Mulakan kiraan pada waktu halaman dimuatkan
         window.onload = function() {
-            // Set default dates to today and 2 days from now
             const today = new Date();
             const endDate = new Date(today);
             endDate.setDate(today.getDate() + 2);
@@ -571,40 +816,25 @@
             document.getElementById('in_end_date').value = endDate.toISOString().split('T')[0];
             
             calculate();
+            fitPreviewToScreen();
         };
 
-        // 6. Inline Service Worker for PWA (Offline capability & Install Prompt)
+        // Pendaftaran Service Worker untuk sokongan PWA
         if ('serviceWorker' in navigator) {
             const swCode = `
-                const CACHE_NAME = 'kos-margin-pwa-v1';
+                const CACHE_NAME = 'kos-margin-pwa-v2';
                 self.addEventListener('install', (e) => {
-                    e.waitUntil(
-                        caches.open(CACHE_NAME).then((cache) => {
-                            // Caching the current standalone page for offline support
-                            return cache.addAll([
-                                location.href,
-                                'https://cdn.tailwindcss.com',
-                                'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-                                'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
-                            ]);
-                        })
-                    );
+                    self.skipWaiting();
                 });
                 self.addEventListener('fetch', (e) => {
-                    e.respondWith(
-                        caches.match(e.request).then((response) => {
-                            return response || fetch(e.request);
-                        })
-                    );
+                    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
                 });
             `;
             const blob = new Blob([swCode], { type: 'application/javascript' });
             const swUrl = URL.createObjectURL(blob);
             
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register(swUrl)
-                    .then(reg => console.log('Service Worker Berjaya Didaftarkan (PWA)'))
-                    .catch(err => console.log('Ralat Pendaftaran SW: ', err));
+                navigator.serviceWorker.register(swUrl).catch(() => {});
             });
         }
     </script>
